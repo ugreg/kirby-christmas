@@ -834,35 +834,10 @@ function update_snow()
 		circfill(v.x, v.y, v.r, universe.colors.white)
 		v.x+=snowx
 		v.y+=snowy
-	end	
-
-	local xx = 1
-	for i=1,450 do		
-		-- if snow[i].y > 130 then
-		-- 	snow[i].x = xx*8
-		-- 	snow[i].y = 4
-		-- end
-		-- xx=xx+1
-	end
-
-	-- circfill(0*start+(-1*snowx), snowy, 0.1, universe.colors.white)
-	-- circfill(1*start+(-1*snowx), snowy, 0.1, universe.colors.white)
-	-- circfill(2*start+(-1*snowx), snowy, 0.1, universe.colors.white)
-	-- circfill(3*start+(-1*snowx), snowy, 0.1, universe.colors.white)
-	-- circfill(4*start+(-1*snowx), snowy, 0.1, universe.colors.white)
-	-- circfill(5*start+(-1*snowx), snowy, 0.1, universe.colors.white)
-	-- circfill(6*start+(-1*snowx), snowy, 0.1, universe.colors.white)
-	-- circfill(7*start+(-1*snowx), snowy, 0.1, universe.colors.white)
-	-- circfill(8*start+(-1*snowx), snowy, 0.1, universe.colors.white)
-	-- circfill(9*start+(-1*snowx), snowy, 0.1, universe.colors.white)
-	-- circfill(10*start+(-1*snowx), snowy, 0.1, universe.colors.white)
-	-- circfill(11*start+(-1*snowx), snowy, 0.1, universe.colors.white)
-	-- circfill(12*start+(-1*snowx), snowy, 0.1, universe.colors.white)
-	-- circfill(13*start+(-1*snowx), snowy, 0.1, universe.colors.white)
-	-- circfill(14*start+(-1*snowx), snowy, 0.1, universe.colors.white)
-	-- circfill(15*start+(-1*snowx), snowy, 0.1, universe.colors.white)
-	-- circfill(16*start+(-1*snowx), snowy, 0.1, universe.colors.white)
-	
+		if v.y > 130 then
+			v.y=4
+		end
+	end		
 end
 
 christmas_str="merry christmas!!"
