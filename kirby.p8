@@ -231,76 +231,17 @@ function move_player(pl)
 	if (btn(1,b)) then 
 		pl.dx = pl.dx + accel; pl.d=1 end
 
-	if ((btn(4,b)) and 
-		pl.standing) then
-		pl.dy = -0.7
+	if (btn(4,b) and pl.delay == 0 
+		and pl.dy < 1) then
+		pl.delay= 14
+		pl.dy = -0.6
 		sfx(8)
-	end
-
-	-- charge
-
-	if (btn(5,b) and pl.delay == 0)
-	then
-		pl.dash = 15
-		pl.delay= 20
-		-- charge in dir of buttons
-		dx=0 dy=0
-		if (btn(0,b)) dx-=1*q
-		if (btn(1,b)) dx+=1*q
-		
-		-- keep controls to 4 btns
-		if (btn(2,b)) dy-=1*q
-		if (btn(3,b)) dy+=1*q
-		
-		if (dx==0 and dy==0) then
-			pl.dx += pl.d * 0.4
-		else
-			local aa=atan2(dx,dy)
-			pl.dx += cos(aa)/2
-			pl.dy += sin(aa)/3
-			
-			pl.dy=max(-0.5,pl.dy)
-		end
-		
-		-- tiny extra vertical boost
-		if (not pl.standing) then
-			pl.dy = pl.dy - 0.2
-		end 
-	
-		sfx(11)
-	
-	end
+	end	
 	
 	-- super: give more dash
 	
 	if (pl.super > 0) pl.dash=2
 	
-	-- dashing
-	
-	if pl.dash > 0 then
-		
-		if (abs(pl.dx) > 0.4 or
-						abs(pl.dy) > 0.2
-		) then
-		
-		for i=1,3 do
-			local s = make_sparkle(
-				69+rnd(3),
-				pl.x+pl.dx*i/3, 
-				pl.y+pl.dy*i/3 - 0.3,
-				(pl.t*3+i)%9+7)
-			if (rnd(2) < 1) then
-				s.col = 7
-			end
-			s.dx = -pl.dx*0.1
-			s.dy = -0.05*i/4
-			s.x = s.x + rnd(0.6)-0.3
-			s.y = s.y + rnd(0.6)-0.3
-		end
-		end
-	end 
-	
-	pl.dash = max(0,pl.dash-1)
 	pl.delay = max(0,pl.delay-1)
 	pl.super = max(0, pl.super-1)
 	
@@ -523,7 +464,6 @@ function monster_hit(m)
 end
 
 function player_hit(p)
-		if (p.dash>0) return
 		p.life-=1
 end
 
@@ -616,8 +556,7 @@ function collide_event(a1, a2)
 		if(a2.is_monster) then -- monster
 			
 			if(
-					(a1.dash > 0 or 
-						a1.y < a2.y-a2.h/2)
+					(a1.y < a2.y-a2.h/2)
 					and a2.can_bump
 				) then
 				
@@ -781,12 +720,14 @@ function _draw()
 	-- player score
 	camera(0,0)
 	color(7)
-	
+
+	draw_christmas()
+
 	if (death_t > 45) then
 		print("❎ restart",
-			44,10+1,14)
+			44,18+1,14)
 		print("❎ restart",
-			44,10,7)
+			44,18,7)
 	end
 
 	if (finished_t > 0) then
@@ -796,55 +737,33 @@ function _draw()
 	if (paint_mode) apply_paint()
 
 	draw_sign()
-	draw_christmas()
-	update_snow()
 end
 
 snow = {}
 index = 1
-for y=1,30 do
-	for x=1,15 do
-		-- circfill(8*x, y*4, 0.1, universe.colors.white)
-		add(snow, {x=8*x, y=y*4, r=0.1}, index)		
+for y=1,35 do
+	for x=0,32 do
+		add(snow, {x=10*x, y=y*5, r=0.1}, index)		
 		index+=1
 	end
 end
-snowx = 0.001
 snowy = 0.1
-start = 8
-function update_snow()
-	-- circfill(i*8, 2, 0.1, universe.colors.red)
-	-- circfill(snowx*i, snowy, 0.1, universe.colors.white)	
-
-	-- for k,v in pairs(snow) do
-	-- 	circfill(v.x, v.y, v.r, universe.colors.white)
-	-- 	if v.y > 120 then
-	-- 		v.x = 1
-	-- 		v.y = 1
-	-- 		for x=1,15 do
-	-- 			v.x = x*8
-	-- 			v.y = 4
-	-- 		end
-	-- 	end
-	-- 	v.x+=snowx
-	-- 	v.y+=snowy
-	-- end	
-
+function draw_snow()
 	for k,v in pairs(snow) do
 		circfill(v.x, v.y, v.r, universe.colors.white)
-		v.x+=snowx
 		v.y+=snowy
 		if v.y > 130 then
-			v.y=4
+			v.y=5
+			r=rnd(2)
 		end
 	end		
 end
 
 christmas_str="merry christmas!!"
 function draw_christmas()
-	rectfill(8,6,120,24,0)
-	rect(8,6,120,24,7)
-	print(christmas_str,12,12,6)
+	rectfill(1,1,126,24,0)
+	rect(1,1,126,24,7)
+	print(christmas_str,12,10,6)
 end
 
 sign_str={
@@ -935,9 +854,6 @@ function draw_actor(a)
 	end
 
 	local fr=a.k + a.frame
-
-	-- rainbow colour when dashing
-	if (a.dash>0) for i=2,15 do pal(i,7+((a.t/2) % 8)) end
 	
 	local sx=a.x*8-4
 	local sy=a.y*8-8
@@ -1007,7 +923,7 @@ end
 -- with a view size: vw,vh
 function draw_world(
 		sx,sy,vw,vh,cam_x,cam_y)	
-
+	
 	-- reduce jitter
 	cam_x=flr(cam_x) 
 	cam_y=flr(cam_y)
@@ -1036,7 +952,14 @@ function draw_world(
 			line(0,y,511,y, universe.colors.lavender)
 		end
 	end
-	
+
+	-- reduce jitter
+	cam_x=flr(cam_x) 
+	cam_y=flr(cam_y)
+
+
+	draw_snow()
+
 	-- background elements	
 	for pass=0,1 do
 	camera()
@@ -1065,12 +988,12 @@ function draw_world(
 				sx += el.dx*t()
 			end
 			local sy=el.xyz[2]
-			
+						
 			sx = (sx-cam_x)/el.xyz[3]
 			sy = (sy-cam_y)/el.xyz[3]
 			
 			repeat
-				map(s[1],s[2],sx,sy,s[3],s[4])
+				map(s[1],s[2],sx,sy,s[3],s[4])					
 				if (el.fill_up) then
 					rectfill(sx,-1,sx+pixw-1,sy-1,el.fill_up)
 				end
@@ -1093,7 +1016,7 @@ function draw_world(
 		if (pass==0) then
 			draw_z1(cam_x,cam_y)
 		end
-	end
+	end		
 	
 	clip()	
 end
