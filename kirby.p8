@@ -23,19 +23,21 @@ function make_actor(k,x,y,d)
 		frames=4,
 		life = 1,
 		hit_t=0,
-		x=x,y=y,dx=0,dy=0,
+		x=x, y=y, 
+		dx=0, dy=0,
 		homex=x,homey=y,
 		ddx = 0.02, -- acceleration
 		ddy = 0.06, -- gravity
 		w=3/8,h=0.5, -- half-width
 		d=d or -1, -- direction
 		bounce=0.8,
-		friction=0.9,
+		friction=0.87,
 		can_bump=true,
 		dash=0,
 		super=0,
 		t=0,
 		standing = false,
+		suck = false,
 		draw=draw_actor,
 		move=move_actor,
 	}
@@ -90,13 +92,12 @@ function make_player(k, x, y, d)
 	
 	a.is_player=true
 	a.move=move_player
-
+	a.life    = 6
 	a.score   = 0
 	a.bounce  = 0
 	a.delay   = 0
 	a.id      = 0 -- player 1
-
-	
+		
 	return a
 end
 
@@ -108,7 +109,7 @@ function _init()
 	"restart level",
 	function()
 		init_level(level)
-	end)
+	end)	
 		
 end
 
@@ -189,32 +190,26 @@ function move_player(pl)
 
 	local b = pl.id
 
-	if (pl.life <= 0) then
-				
-				for i=1,32 do
-					s=make_sparkle(69,
-						pl.x, pl.y-0.6)
-					s.dx = cos(i/32)/2
-					s.dy = sin(i/32)/2
-					s.max_t = 30 
-					s.ddy = 0.01
-					s.frame=69+rnd(3)
-					s.col = 7
-				end
-				
-				sfx(17)
-				pl.death_t=time()
-				
+	if (pl.life <= 0) then				
+		for i=1,32 do
+			s=make_sparkle(69,
+				pl.x, pl.y-0.6)
+			s.dx = cos(i/32)/2
+			s.dy = sin(i/32)/2
+			s.max_t = 30 
+			s.ddy = 0.01
+			s.frame=69+rnd(3)
+			s.col = 7
+		end
+		
+		sfx(17)
+		pl.death_t=time()
 				
 		return
 	end
 	
 	local accel = 0.05
 	local q=0.7
-	
-	if (pl.dash > 10) then
-		accel = 0.08
-	end
 	
 	if (pl.super > 0) then 
 		q*=1.5
@@ -233,10 +228,19 @@ function move_player(pl)
 
 	if (btn(4,b) and pl.delay == 0 
 		and pl.dy < 1) then
-		pl.delay= 14
+		pl.delay = 14
 		pl.dy = -0.6
 		sfx(8)
 	end	
+
+	-- suck
+	if (btn(5,b)) and pl.delay == 0 then
+		sfx(18)	
+		pl.suck = true
+		pl.delay = 1
+	else
+		pl.suck = false
+	end
 	
 	-- super: give more dash
 	
@@ -358,29 +362,22 @@ function move_actor(a)
 	-- candidate position
 	x1 = a.x + a.dx + sgn(a.dx)/4
 	
-	if not ssolid(x1,a.y-0.5,ign)
-	then
+	if not ssolid(x1,a.y-0.5,ign) then
 		-- nothing in the way->move
-		a.x += a.dx 
-		
-	else -- hit wall
-	
+		a.x += a.dx 		
+	else -- hit wall	
 		-- bounce
 		if (a.dash > 0)sfx(12) 
-		a.dx *= -1
-		
-		a.hit_wall=true
-		
+		a.dx *= -1		
+		a.hit_wall=true		
 		-- monsters turn around
 		if (a.is_monster) then
 			a.d *= -1
 			a.dx = 0
-		end
-		
+		end		
 	end
 	
-	-- y movement
-	
+	-- y movement	
 	local fw=0.25
 
 	if (a.dy < 0) then
@@ -411,7 +408,7 @@ function move_actor(a)
 			if (a.bounce > 0 and 
 			    a.dy > 0.2) 
 			then
-				a.dy = a.dy * -a.bounce
+				a.dy = a.dy * - a.bounce
 			else
 			
 			a.standing=true
@@ -464,19 +461,22 @@ function monster_hit(m)
 end
 
 function player_hit(p)
-		p.life-=1
+	p.life-=1
+	p.dx *= -5
+	p.dy *= -6
+	sfx(21)
 end
 
 function collide_event(a1, a2)
 
 	if (a1.is_monster and
-					a1.can_bump and
-					a2.is_monster) then
-					local d=sgn(a1.x-a2.x)
-					if (a1.d!=d) then
-						a1.dx=0
-						a1.d=d
-					end
+		a1.can_bump and
+		a2.is_monster) then
+		local d=sgn(a1.x-a2.x)
+		if (a1.d!=d) then
+			a1.dx=0
+			a1.d=d
+		end
 	end
 	
 	-- bouncy mushroom
@@ -551,8 +551,7 @@ function collide_event(a1, a2)
 			sfx(9)
 		end
 		
-		-- charge or dupe monster
-		
+		-- charge or dupe monster		
 		if(a2.is_monster) then -- monster
 			
 			if(
@@ -569,9 +568,7 @@ function collide_event(a1, a2)
 				monster_hit(a2)
 				
 			else
-				-- player death
-				a1.life=0
-				
+				player_hit(a1)				
 			end
 		end
 			
@@ -592,9 +589,8 @@ end
 
 function collide(a1, a2)
 	if (not a1) return
-	if (not a2) return
-	
-	if (a1==a2) then return end
+	if (not a2) return	
+	if (a1==a2) then return end	
 	local dx = a1.x - a2.x
 	local dy = a1.y - a2.y
 	if (abs(dx) < a1.w+a2.w) then
@@ -606,18 +602,14 @@ function collide(a1, a2)
 end
 
 function collisions()
-
 	-- to do: optimize if too
 	-- many actors
-
 	for i=1,#actor do
 		for j=i+1,#actor do
 			collide(actor[i],actor[j])
 		end
-	end
-	
+	end	
 end
-
 
 
 function outgame_logic()
@@ -721,7 +713,7 @@ function _draw()
 	camera(0,0)
 	color(7)
 
-	draw_christmas()
+	draw_merrrryyyyy_christmas()
 
 	if (death_t > 45) then
 		print("❎ restart",
@@ -760,10 +752,12 @@ function draw_snow()
 end
 
 christmas_str="merry christmas!!"
-function draw_christmas()
+function draw_merrrryyyyy_christmas()
 	rectfill(1,1,126,24,0)
 	rect(1,1,126,24,7)
 	print(christmas_str,12,10,6)
+
+	print("life"..pl[1].life,12,16,6)
 end
 
 sign_str={
@@ -1333,8 +1327,7 @@ function move_frog(a)
 		local tlen = sin(a.tongue_t/48)*5
 		a.tongue_x=a.x-tlen*a.d
 
-		-- catch player
-		
+		-- catch player		
 		if not a.ha and p then
 			local dx=p.x-a.tongue_x
 			local dy=p.y-a.y
@@ -1520,8 +1513,8 @@ function move_swirly(a)
 	if (p) tx,ty=p.x,p.y
 	
 	-- local variation
--- tx += cos(a.t/60)*3
--- ty += sin(a.t/40)*3
+	-- tx += cos(a.t/60)*3
+	-- ty += sin(a.t/40)*3
 	
 	local turn_spd=1/60
 	local accel = 1/64
@@ -1631,7 +1624,7 @@ function move_swirly(a)
 					if (p.is_standing) p.dy=min(p.dy,-0.2)
 					sfx(19)
 					
-					if (p.dash>0) then
+					if ((p.suck==true)) then
 						if (i==0) monster_hit(a)
 					else
 						player_hit(p)
@@ -2015,7 +2008,7 @@ function init_level(lev)
 	pl = {}
 	loot = {}
 	
-	reload()
+	reload()	
 	
 	if (level <= 4) then
 	-- copy section of map
@@ -2031,8 +2024,7 @@ function init_level(lev)
 		
 		if (val == 72) then
 			clear_cel(x,y)
-			pl[1] = make_player(72, x+0.5,y+0.5,1)
-
+			pl[1] = make_player(72, x+0.5,y+0.5,1)			
 			if (num_players==2) then
 				pl[2] = make_player(88, x+2,y+1,1)
 				pl[2].id = 1
