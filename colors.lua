@@ -20,3 +20,9 @@ universe.colors.blue        = 12
 universe.colors.lavender    = 13
 universe.colors.pink        = 14
 universe.colors.light_peach = 15
+
+-- local transparent = true
+-- if a.k == 72 then
+--     palt(universe.colors.blue, transparent)
+--     palt(universe.colors.black, not transparent)
+-- end
