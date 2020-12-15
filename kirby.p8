@@ -36,8 +36,8 @@ function make_actor(k,x,y,d)
 		dash=0,
 		super=0,
 		t=0,
+		flying = false,
 		standing = false,
-		inhale = false,
 		draw=draw_actor,
 		move=move_actor,
 	}
@@ -92,7 +92,9 @@ function make_player(k, x, y, d)
 	a.bounce = 0
 	a.ddy = 0.064
 	a.delay = 0
+	a.flying = false
 	a.frames = 8
+	a.inhale = false
 	a.is_player=true
 	a.life = 6
 	a.move=move_player
@@ -221,14 +223,21 @@ function move_player(pl)
 	if (btn(1,b)) then 
 		pl.dx = pl.dx + accel; pl.d=1 end
 	
-	-- jump
-	if (btnp(4,b) and pl.delay == 0 
-		and pl.dy < 1) then
-		pl.delay = 8
+	-- float
+	if pl.flying then
+		pl.ddy = 0.006
+	else
+		pl.ddy = 0.06
+	end
+
+	-- jump and fly
+	if (btnp(4,b) and pl.dy < 1) then
 		if not pl.standing then
-			pl.dy = -0.4
-		else
-			pl.dy = -0.6
+			pl.dy = -0.08
+			pl.ddy = 0
+			pl.flying = true
+		else			
+			pl.dy = -0.62
 		end
 		sfx(8)
 	end	
@@ -257,6 +266,10 @@ function move_player(pl)
 	else
 		pl.inhale = false
 	end
+
+	if (pl.inhale or btn(3,b)) then 
+		pl.flying = false
+	end
 	
 	-- super: give more dash	
 	if (pl.super > 0) pl.dash=2
@@ -267,6 +280,7 @@ function move_player(pl)
 	-- frames
 	-- walk
 	if pl.standing then
+		pl.flying = false
 		local f = (pl.frame+abs(pl.dx)*2) % pl.frames	
 		if f < 4 then
 			pl.frame = f
@@ -279,7 +293,7 @@ function move_player(pl)
 
 	-- fly
 	if not pl.standing then
-		local f = (pl.frame+abs(pl.dx)*2) % pl.frames	
+		local f = (pl.frame) % pl.frames	
 		if f > 5 then
 			pl.frame = f
 		elseif f < 8 then
@@ -291,7 +305,7 @@ function move_player(pl)
 
 	if (pl.inhale) pl.frame = 4	
 	
-	if (abs(pl.dx) < 0.1 and not pl.inhale) pl.frame = 0
+	if (abs(pl.dx) < 0.1 and not pl.inhale and not pl.flying) pl.frame = 0
 	
 end
 
@@ -777,7 +791,7 @@ function _draw()
 
 	draw_sign()
 
-	-- debug()
+	debug()
 end
 
 christmas_str="merry christmas!!"
