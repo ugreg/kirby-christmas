@@ -231,7 +231,7 @@ function move_player(pl)
 	end
 
 	-- jump and fly
-	if (btnp(4,b) and pl.dy < 1) then
+	if (btnp(4,b) and pl.dy < 1 and not pl.inhale) then
 		if not pl.standing then
 			pl.dy = -0.08
 			pl.ddy = 0
@@ -249,7 +249,7 @@ function move_player(pl)
 		for i=1,3 do
 			local s = make_sparkle(
 				69+rnd(3),
-				pl.x+pl.dx*i/3, 
+				pl.x+0.2055*i/3, 
 				pl.y+pl.dy*i/3 - 0.3,
 				(pl.t*3+i)%9+7)
 			
@@ -263,6 +263,7 @@ function move_player(pl)
 			s.x = s.x + 0.3
 			s.y = s.y + 0.3
 		end
+		pl.dx = 0
 	else
 		pl.inhale = false
 	end
@@ -303,7 +304,9 @@ function move_player(pl)
 		pl.frame = (pl.frame+abs(pl.dx)/2) % pl.frames
 	end
 
-	if (pl.inhale) pl.frame = 4	
+	if pl.inhale then 
+		pl.frame = 4			
+	end
 	
 	if (abs(pl.dx) < 0.1 and not pl.inhale and not pl.flying) pl.frame = 0
 	
@@ -613,12 +616,9 @@ function collide_event(a1, a2)
 			sfx(9)
 		end
 		
-		-- charge or dupe monster		
 		if(a2.is_monster) then -- monster
 			
-			if((a1.y < a2.y-a2.h/2)
-					and a2.can_bump
-				) then
+			if(a2.can_bump and a1.inhale) then
 				
 				-- slow down player
 				a1.dx *= 0.7
@@ -647,7 +647,7 @@ function move_sparkle(sp)
 	sp.t = sp.t + 1
 end
 
-
+-- with inhale!
 function collide(a1, a2)
 	if (not a1) return
 	if (not a2) return	
@@ -658,6 +658,13 @@ function collide(a1, a2)
 		if (abs(dy) < a1.h+a2.h) then
 			collide_event(a1, a2)
 			collide_event(a2, a1)
+		end
+	end
+	if a1.is_player and a1.inhale then
+		if (abs(dx) < a1.w+a2.w+2) then
+			if (abs(dy) < a1.h+a2.h) then
+				collide_event(a1, a2)
+			end
 		end
 	end
 end
@@ -791,6 +798,8 @@ function _draw()
 
 	draw_sign()
 
+	-- draw_hud()
+
 	debug()
 end
 
@@ -862,12 +871,24 @@ function draw_sign()
 	print(sign_str[level],12,12,6)
 end
 
+function draw_hud()
+	rectfill(0,120,127,127,universe.colors.black)
+	for i=0,5 do
+		local distance = (i*6)
+		circfill(20+distance, 124, 2, universe.colors.dark_green)
+	end	
+	
+	line(118, 121, 119, 120, universe.colors.green)
+	line(118, 123, 119, 122)
+	line(118, 125, 119, 124)
+	line(118, 127
+	, 119, 126)
+	line(0, 120, 127, 120, universe.colors.black)
+end
 
 function fade_out()
-
 	dpal={0,1,1, 2,1,13,6,
-							4,4,9,3, 13,1,13,14}
-	
+		4,4,9,3, 13,1,13,14}
 	
 					
 	-- palette fade
@@ -880,8 +901,7 @@ function fade_out()
 			pal(j,col,1)
 		end
 		flip()
-	end
-	
+	end	
 end
 -->8
 -- draw world
@@ -1643,29 +1663,29 @@ function move_swirly(a)
 	-- move tail
 	
 	for j=1,3 do
-	for i=1,#a.tail[j] do
+		for i=1,#a.tail[j] do
+			
+			local s=a.tail[j][i]
+			local h=a.tail[j][i-1]
+			local slen=s.len
+			local hx = h.x
+			local hy = h.y
+			
+			if (i==1) then
+				if (j==2) hx -=.5 --hy-=.7
+				if (j==3) hx +=.5 --hy-=.7
+			end
+			
+			local dx=hx-s.x
+			local dy=hy-s.y
+			
+			local aa=atan2(dx,dy)
 		
-		local s=a.tail[j][i]
-		local h=a.tail[j][i-1]
-		local slen=s.len
-		local hx = h.x
-		local hy = h.y
-		
-		if (i==1) then
-			if (j==2) hx -=.5 --hy-=.7
-			if (j==3) hx +=.5 --hy-=.7
+			if (j==2) aa=turn_to(aa,7/8,0.02)
+			if (j==3) aa=turn_to(aa,3/8,0.02)
+			s.x=hx-cos(aa)*s.slen
+			s.y=hy-sin(aa)*s.slen
 		end
-		
-		local dx=hx-s.x
-		local dy=hy-s.y
-		
-		local aa=atan2(dx,dy)
-	
-		if (j==2) aa=turn_to(aa,7/8,0.02)
-		if (j==3) aa=turn_to(aa,3/8,0.02)
-		s.x=hx-cos(aa)*s.slen
-		s.y=hy-sin(aa)*s.slen
-	end
 	end
 	
 	-- players collide with tail
@@ -1682,25 +1702,17 @@ function move_swirly(a)
 			local dd=sqrt(dx*dx+dy*dy)
 			local rr=0.5+r
 			if (dd<0.5+r) then
-					// janky bounce away
-					local aa=atan2(dx,dy)
-					aa+=rnd(0.4)-rnd(0.4)
-					p.dx=cos(aa)/2
-					p.dy=sin(aa)/2
-					if (p.is_standing) p.dy=min(p.dy,-0.2)
-					sfx(19)
-					
-					if ((p.inhale==true)) then
-						if (i==0) monster_hit(a)
-					else
-						player_hit(p)
-					end
-					
+				// janky bounce away
+				local aa=atan2(dx,dy)
+				aa+=rnd(0.4)-rnd(0.4)
+				p.dx=cos(aa)/2
+				p.dy=sin(aa)/2
+				if (p.is_standing) p.dy=min(p.dy,-0.2)
+				sfx(19)					
 			end
 		end
 		end
-		end
-		
+		end		
 	
 end
 
@@ -2055,7 +2067,7 @@ function init_level(lev)
 	music(-1)
 
 	if play_music then
-	if (level==1) music(0)
+	if (level==1) music(20)
 	if (level==2) music(4)
 	if (level==3) music(16)
 	
