@@ -21,8 +21,22 @@ greguniverse.colors.lavender    = 13
 greguniverse.colors.pink        = 14
 greguniverse.colors.light_peach = 15
 
--- local transparent = true
--- if a.k == 72 then
---     palt(greg.universe.colors.blue, transparent)
---     palt(greg.universe.colors.black, not transparent)
--- end
+-- undocumented 
+-- requires pal with i=1..15
+-- pal(i,128,i) per color
+greguniverse.colors.darkest_grey  = 128
+greguniverse.colors.darker_blue   = 129
+greguniverse.colors.darker_purple = 130
+greguniverse.colors.blue_green    = 131
+greguniverse.colors.dark_brown    = 132
+greguniverse.colors.darker_grey   = 133
+greguniverse.colors.medium_grey   = 134
+greguniverse.colors.light_yellow  = 135
+greguniverse.colors.dark_red      = 136
+greguniverse.colors.dark_orange   = 137
+greguniverse.colors.light_green   = 138
+greguniverse.colors.medium_green  = 139
+greguniverse.colors.medium_blue   = 140
+greguniverse.colors.mauve         = 141
+greguniverse.colors.dark_peach    = 142
+greguniverse.colors.peach         = 143
