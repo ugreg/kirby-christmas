@@ -349,74 +349,54 @@ function move_monster(m)
 end
 
 
-function smash(x,y,b)
-
-		local val = mget(x, y, 0)
-		if (not fget(val,4)) then
-			-- not smashable
-			-- -> pass on to solid()
-			return solid(x,y,b)
-		end    
+function inhale_block(x,y,b)
+	local val = mget(x, y, 0)
+	if (not fget(val,4)) then
+		-- not inhale_blockable
+		-- -> pass on to solid()
+		return solid(x,y,b)
+	end
+	
+	-- spawn
+	if (val == 48) then
+		local a=make_actor(
+			loot[#loot],
+			x+0.5,y-0.2)
 		
-		
-		-- spawn
-		if (val == 48) then
-			local a=make_actor(
-				loot[#loot],
-				x+0.5,y-0.2)
+		a.dy=-0.8
+		a.d=flr(rnd(2))*2-1
+		a.d=0.25 -- swirly
+		loot[#loot]=nil
+	end
+	
 			
-			a.dy=-0.8
-			a.d=flr(rnd(2))*2-1
-			a.d=0.25 -- swirly
-			loot[#loot]=nil
-		end
-		
-				
-		clear_cel(x,y)
-		sfx(10)
-			
-		-- make debris
-		
-		for by=0,1 do
-			for bx=0,1 do
-				s=make_sparkle(22,
-				0.25+flr(x) + bx*0.5, 
-				0.25+flr(y) + by*0.5,
-				0)
-				s.dx = (bx-0.5)/4
-				s.dy = (by-0.5)/4
-				s.max_t = 30 
-				s.ddy = 0.02
-			end
-		end
-
-		return false -- not solid
+	clear_cel(x,y)
+	return false -- not solid
 end
 
 function move_actor(a)
 
 	if (a.life<=0) del(actor,a)
 	
-	a.standing=false
+	a.standing = false
 	
 	-- when dashing, call smash()
 	-- for any touched blocks
 	-- (except for landing blocks)
-	local ssolid=
-		a.inhale == true and smash or solid 
+	local ssolid =
+		a.inhale == true and inhale_block or solid 
 	
 	-- solid going down -- only
-	-- smash when holding down
-	local ssolidd=
+	-- inhale_block when holding down
+	local ssolidd =
 		a.dash>0 and (btn(3,a.id))
-		 and smash or solid 
+		 and inhale_block or solid 
 		
 	--ignore jump-up-through
 	--blocks only when have gravity
 	local ign=a.ddy > 0
 	
 	-- x movement 
-	
 	-- candidate position
 	x1 = a.x + a.dx + sgn(a.dx)/4
 	
