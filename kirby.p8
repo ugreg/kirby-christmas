@@ -200,7 +200,7 @@ function move_player(pl)
 			s.col = 7
 		end
 		
-		sfx(greguniverse.sfx.player_death)
+		-- sfx(greguniverse.sfx.player_death)
 		pl.death_t=time()
 				
 		return
@@ -240,12 +240,12 @@ function move_player(pl)
 		else			
 			pl.dy = -0.62
 		end
-		sfx(greguniverse.sfx.jump)
+		-- sfx(greguniverse.sfx.jump)
 	end	
 
 	-- inhale
 	if (btn(5,b)) then
-		sfx(greguniverse.sfx.inhale)	
+		-- sfx(greguniverse.sfx.inhale)	
 		pl.inhale = true
 		for i=1,3 do
 			local s = make_sparkle(
@@ -320,7 +320,7 @@ function move_monster(m)
 	if (m.life<=0) then
 		bang_puff(m.x,m.y-0.5,104)
 
-		sfx(greguniverse.sfx.enemy_death)
+		-- sfx(greguniverse.sfx.enemy_death)
 		return
 	end
 	
@@ -419,7 +419,7 @@ function move_actor(a)
 		a.x += a.dx 		
 	else -- hit wall	
 		-- bounce
-		if (a.dash > 0)sfx(greguniverse.sfx.bounce) 
+		-- if (a.dash > 0)sfx(greguniverse.sfx.bounce) 
 		a.dx *= -1		
 		a.hit_wall=true		
 		-- monsters turn around
@@ -505,7 +505,7 @@ function monster_hit(m)
 	m.dx/=4
 	m.dy/=4
 	-- survived: thunk sound
-	if (m.life>0) sfx(greguniverse.sfx.actor_hit)
+	-- if (m.life>0) sfx(greguniverse.sfx.actor_hit)
 	
 end
 
@@ -514,7 +514,7 @@ function player_hit(p,a)
 	p.dx *= -2
 	p.dy *= -4
 	a.dx *= -10
-	sfx(greguniverse.sfx.actor_hit)
+	-- sfx(greguniverse.sfx.actor_hit)
 	for i=1,3 do
 		local s = make_sparkle(
 			69+rnd(3),
@@ -549,7 +549,7 @@ function collide_event(a1, a2)
 		not a1.standing) then
 			a1.dy=-1.1
 			a2.active_t=6
-			sfx(greguniverse.sfx.inhale)
+			-- sfx(greguniverse.sfx.inhale)
 		end
 	end
 
@@ -562,13 +562,13 @@ function collide_event(a1, a2)
 				a1.dx = a1.dx * 2
 				--a1.dy = a1.dy-0.1
 				-- a1.standing = false
-				sfx(greguniverse.sfx.get_lollipop)
+				-- sfx(greguniverse.sfx.get_lollipop)
 			end
 
 			-- watermelon
 			if (a2.k==80) then
 				a1.score+=5
-				sfx(greguniverse.sfx.get_pickup)
+				-- sfx(greguniverse.sfx.get_pickup)
 			end
 			
 			-- end level
@@ -578,7 +578,7 @@ function collide_event(a1, a2)
 				del(actor,pl[1])
 				del(actor,pl[2])
 				music(-1,500)
-				sfx(greguniverse.sfx.level_clear)
+				-- sfx(greguniverse.sfx.level_clear)
 			end
 			
 			-- glitch mushroom
@@ -612,7 +612,7 @@ function collide_event(a1, a2)
 			s=make_sparkle(85,a2.x,a2.y-.5)
 			s.frames=3
 			s.max_t=15
-			sfx(greguniverse.sfx.get_pickup)
+			-- sfx(greguniverse.sfx.get_pickup)
 		end
 		
 		if(a2.is_monster) then -- monster
@@ -686,7 +686,7 @@ function outgame_logic()
 			not alive(pl[2]) then
 			death_t=1
 			music(-1)
-			sfx(greguniverse.sfx.game_over)
+			-- sfx(greguniverse.sfx.game_over)
 			
 	end
 
@@ -710,7 +710,7 @@ function outgame_logic()
 		then 
 				music(-1)
 				sfx(-1)
-				sfx(greguniverse.sfx.fade_out)
+				-- sfx(greguniverse.sfx.fade_out)
 				fade_out()				
 				
 				-- restart cart end of slice
@@ -2160,7 +2160,7 @@ function draw_finished(tt)
 				local y=50-pass
 				if (q) then
 						y+=sin(t2/8)*4/(t2/2)
-						if (not gem_sfx[i]) sfx(greguniverse.sfx.gem_total)
+						-- if (not gem_sfx[i]) sfx(greguniverse.sfx.gem_total)
 						gem_sfx[i]=true
 				end				
 				spr(67,64-n*4+i*8,y)				
