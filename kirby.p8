@@ -2181,14 +2181,16 @@ function draw_finished(tt)
 	if (tt < 15) return
 	tt -= 15
 
-	local str="★ stage clear ★  "
+	local str="★ you did it ★  "
 	
+	rect(62-#str*2, 27, 97, 38, 14)
+	rectfill(63-#str*2, 28, 96, 37, 13)
 	print(str,64-#str*2,31,14)
 	print(str,64-#str*2,30,7)
 	
 	-- gems
-	local n = total_gems
-	
+	rectfill(0, 49, 127, 58, 5)
+	local n = total_gems	
 	for i=1,15 do pal(i,13) end
 	for pass=0,1 do
 		for i=0,n-1 do
@@ -2206,8 +2208,10 @@ function draw_finished(tt)
 	end
 	
 	if (tt > 45) then
-		print("❎ continue",42,91,12)
-		print("❎ continue",42,90,7)
+		rectfill(46, 87, 85, 98, 12)
+		rectfill(47, 88, 84, 97, 5)
+		print("❎ replay",48,91,12)
+		print("❎ replay",48,90,7)
 	end
 	
 end
